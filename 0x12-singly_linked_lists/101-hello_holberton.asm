@@ -1,23 +1,18 @@
-#include "lists.h"
-/**
- * print_list - prints all the elements of a list.
- * @h: singly linked list.
- * Return: no of elements in the list.
- */
+	extern printf
 
-size_t print_list(const list_t *h)
-{
-	size_t nelem;
+	section .data
+msg:	db "Hello, Holberton", 0
+fmt:	db "%s", 10, 0
 
-	nelem = 0;
-	while (h != NULL)
-	{
-		if (h->str == NULL)
-			printf("[%d] %s\n", 0, "(nil)");
-		else
-			printf("[%d] %s\n", h->len, h->str);
-		h = h->next;
-		nelem++;
-	}
-	return (nelem);
-}
+	section .text
+
+	global main
+main:
+	push	rbp
+	mov	rdi,fmt
+	mov	rsi,msg
+	mov	rax,0
+	call	printf
+	pop	rbp
+	mov	rax,0
+	ret
