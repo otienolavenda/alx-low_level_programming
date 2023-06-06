@@ -1,22 +1,18 @@
 #include "lists.h"
 #include <stdlib.h>
 /**
- * pop_listint -deleting the head node and returning the head nodes data (n)
- * @head: pointer to pointer of the list
- * Return:0
+ * sum_listint - function thatb  return sum of data n
+ * @head: pointer to the start of the list
+ * Return: 0
  */
-int pop_listint(listint_t **head)
+int sum_listint(listint_t *head)
 {
-	int n;
-	listint_t *point;
+	int sum = 0;
 
-	if (head == NULL || *head == NULL)
-		return (0);
-
-	n = (*head)->n;
-	point = (*head)->next;
-	free(*head);
-	*head = point;
-
-	return (n);
+	while (head != NULL)
+	{
+		sum += head->n;
+		head = head->next;
+	}
+	return (sum);
 }
