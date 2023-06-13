@@ -1,104 +1,59 @@
-#include "main.h"
+#define _POSIX_C_SOURCE 200809L
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#define READ_NBYTES 1204
 
 /**
- * _errors - print error
- * @error: exit value
- * @s: filename
- * @fd: fildes
- * Return: 0
- */
-int _errors(int error, char *s, int fd)
-{
-	switch (error)
-	{
-		case 97:
-			fprintf(stderr, "Usage: cp file_from file_to\n");
-			exit(error);
-		case 98:
-			fprintf(stderr, "Error: Can't read from file %s\n", s);
-			exit(error);
-		case 99:
-			fprintf(stderr, "Error: Can't write to %s\n", s);
-			exit(error);
-		case 100:
-			fprintf(stderr, "Error: Can't close fd %d\n", fd);
-			exit(error);
-		default:
-			return (0);
-	}
-}
-
-/**
- * buffering - allocate space
- * @file: file
- * Return: buffer
- */
-char *buffering(char *file)
-{
-	char *buffer;
-
-	buffer = malloc(sizeof(char) * 1024);
-	if (!buffer)
-		_errors(99, file, 0);
-	return (buffer);
-}
-
-/**
- * close_file - close
- * @fc: file
- * Reurn: int
- */
-void close_file(int fc)
-{
-	int c;
-
-	c = close(fc);
-	if (c == -1)
-		_errors(100, NULL, fc);
-}
-
-/**
- * main - copy
- * @argc: num of args
- * @argv: vector
- * Return: int
+ * main - copy content of one file into another
+ * @argc: count of arguments to program
+ * @argv: array of arguments to program
+ *
+ * Return: EXIT_SUCCESS on success, exit with error number, otherwise.
  */
 int main(int argc, char *argv[])
 {
-	int file_from, file_to, reed, rite;
-	char *buffer;
-	mode_t mode = umask(0);
-
-	mode = 0664;
+	char *file_from, *file_to;
+	char buf[READ_NBYTES];
+	ssize_t r;
+	int fdr, fdw, c = 0;
 
 	if (argc != 3)
-		_errors(97, NULL, 0);
-
-	buffer = buffering(argv[2]);
-	file_from = open(argv[1], O_RDONLY);
-	file_to = open(argv[2], O_CREAT | O_WRONLY | O_TRUNC, mode);
-	reed = read(file_from, buffer, 1024);
-
-	while (rite > 0)
 	{
-		if (file_from == -1 || reed == -1)
-		{
-			free(buffer);
-			_errors(98, argv[1], 0);
-		}
-
-		rite = write(file_to, buffer, reed);
-		if (file_to == -1 || rite == -1)
-		{
-			free(buffer);
-			_errors(99, argv[2], 0);
-		}
-
-		reed = read(file_from, buffer, 1024);
-		file_to = open(argv[2], O_WRONLY | O_APPEND);
+		dprintf(STDERR_FILENO, "Usage: cp file_from file_to\n");
+		exit(97);
 	}
-
-	close_file(file_from);
-	close_file(file_to);
-	return (0);
+	file_from = argv[1];
+	file_to = argv[2];
+	fdr = open(file_from, O_RDONLY);
+	if (fdr == -1)
+	{
+		dprintf(STDERR_FILENO, "Error: Can't read from file %s\n",
+			file_from);
+		exit(98);
+	}
+	fdw = open(file_to, O_CREAT | O_TRUNC | O_WRONLY, 00664);
+	if (fdw == -1)
+	{
+		dprintf(STDERR_FILENO, "Error: Can't write to %s\n", file_to);
+		exit(99);
+	}
+	while ((r = read(fdr, buf, READ_NBYTES)))
+		write(fdw, buf, r);
+	if (close(fdw))
+	{
+		dprintf(STDERR_FILENO, "Error: Can't close fd %d\n", fdw);
+		c = 1;
+	}
+	if (close(fdr))
+	{
+		dprintf(STDERR_FILENO, "Error: Can't close fd %d\n", fdr);
+		c = 1;
+	}
+	if (c)
+		exit(100);
+	exit(EXIT_SUCCESS);
 }
