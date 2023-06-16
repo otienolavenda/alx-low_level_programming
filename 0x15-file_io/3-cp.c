@@ -1,55 +1,104 @@
-#include "holberton.h"
-/**
- * main - program to copy
- * @ac: argument count
- * @av: array of arguments
- * Return: a value
- */
-int main(int ac, char **av)
-{
-	int fdFrum, fdToo, wrote, readed;
-	char buff[1024];
+#include "main.h"
 
-	if (ac != 3)
+/**
+ * _errors - print error
+ * @error: exit value
+ * @s: filename
+ * @fd: fildes
+ * Return: 0
+ */
+int _errors(int error, char *s, int fd)
+{
+	switch (error)
 	{
-		dprintf(STDERR_FILENO, "Usage: cp file_from file_to\n");
-		exit(97);
+		case 97:
+			fprintf(stderr, "Usage: cp file_from file_to\n");
+			exit(error);
+		case 98:
+			fprintf(stderr, "Error: Can't read from file %s\n", s);
+			exit(error);
+		case 99:
+			fprintf(stderr, "Error: Can't write to %s\n", s);
+			exit(error);
+		case 100:
+			fprintf(stderr, "Error: Can't close fd %d\n", fd);
+			exit(error);
+		default:
+			return (0);
 	}
-	fdFrum = open(av[1], O_RDONLY);
-	if (fdFrum == -1)
+}
+
+/**
+ * buffering - allocate space
+ * @file: file
+ * Return: buffer
+ */
+char *buffering(char *file)
+{
+	char *buffer;
+
+	buffer = malloc(sizeof(char) * 1024);
+	if (!buffer)
+		_errors(99, file, 0);
+	return (buffer);
+}
+
+/**
+ * close_file - close
+ * @fc: file
+ * Reurn: int
+ */
+void close_file(int fc)
+{
+	int c;
+
+	c = close(fc);
+	if (c == -1)
+		_errors(100, NULL, fc);
+}
+
+/**
+ * main - copy
+ * @argc: num of args
+ * @argv: vector
+ * Return: int
+ */
+int main(int argc, char *argv[])
+{
+	int file_from, file_to, reed, rite;
+	char *buffer;
+	mode_t mode = umask(0);
+
+	mode = 0664;
+
+	if (argc != 3)
+		_errors(97, NULL, 0);
+
+	buffer = buffering(argv[2]);
+	file_from = open(argv[1], O_RDONLY);
+	file_to = open(argv[2], O_CREAT | O_WRONLY | O_TRUNC, mode);
+	reed = read(file_from, buffer, 1024);
+
+	while (rite > 0)
 	{
-		dprintf(STDERR_FILENO, "Error: Can't read from file %s\n", av[1]);
-		exit(98);
-	}
-	fdToo = open(av[2], O_CREAT | O_WRONLY | O_TRUNC, 0664);
-	if (fdToo == -1)
-	{
-		dprintf(STDERR_FILENO, "Error: Can't write to %s\n", av[2]);
-		exit(99);
-	}
-	while ((readed = read(fdFrum, buff, 1024)) > 0)
-	{
-		wrote = write(fdToo, buff, readed);
-		if (wrote == -1)
+		if (file_from == -1 || reed == -1)
 		{
-			dprintf(STDERR_FILENO, "Error: Can't write to %s\n", av[2]);
-			exit(99);
+			free(buffer);
+			_errors(98, argv[1], 0);
 		}
+
+		rite = write(file_to, buffer, reed);
+		if (file_to == -1 || rite == -1)
+		{
+			free(buffer);
+			_errors(99, argv[2], 0);
+		}
+
+		reed = read(file_from, buffer, 1024);
+		file_to = open(argv[2], O_WRONLY | O_APPEND);
 	}
-	if (readed == -1)
-	{
-		dprintf(STDERR_FILENO, "Error: Can't read from file %s\n", av[1]);
-		exit(98);
-	}
-	if (close(fdFrum) == -1)
-	{
-		dprintf(STDERR_FILENO, "Error: Can't close fd %d", fdFrum);
-		exit(100);
-	}
-	if (close(fdToo) == -1)
-	{
-		dprintf(STDERR_FILENO, "Error: Can't close fd %d", fdToo);
-		exit(100);
-	}
+
+	close_file(file_from);
+	close_file(file_to);
 	return (0);
 }
