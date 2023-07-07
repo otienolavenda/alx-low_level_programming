@@ -1,11 +1,12 @@
 #include <stdio.h>
-#include "main.h"
+include "main.h"
+
 /**
- * flip_bits - number of bits to flip
- * @n: first number
- * @m: second number
- *
- * return: number of bits that differ
+ * flip_bits - returns the number of bits to flip so as to get
+ * from one number to another
+ * @n: number
+ * @m: number
+ * Return: number of bits to flip
  */
 unsigned int flip_bits(unsigned long int n, unsigned long int m)
 {
