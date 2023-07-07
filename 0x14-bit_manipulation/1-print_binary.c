@@ -1,9 +1,8 @@
 #include "main.h"
-#include <stdio.h>
 /**
- * _print_binary -recursively print rightmost bit of non_zero number
- * in its binary representation.
- * @n: number to print
+ * print_binary - prints binary equivalent of a number
+ * @n: the number
+ * Return: void
  */
 void _print_binary(unsigned long int n)
 {
